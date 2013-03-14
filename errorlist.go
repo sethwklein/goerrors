@@ -103,6 +103,22 @@ func WalkN(err error, n int, walkFn func(error)) {
 	Walk(err, fn)
 }
 
+// WalkUntil visits entries in err until walkFn returns false. It uses Walk.
+func WalkUntil(err error, walkFn func(error) bool) {
+	fn := func(e error) {
+		if !walkFn(e) {
+			panic(walkEnded{})
+		}
+	}
+	defer func() {
+		e := recover()
+		if _, ok := e.(walkEnded); !ok {
+			panic(e)
+		}
+	}()
+	Walk(err, fn)
+}
+
 // Error implements ErrorList.Error.
 func (list *errorList) Error() string {
 	if len(list.a) == 1 {
